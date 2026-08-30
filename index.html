@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sổ Đánh Giá (Vạn Năng)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --c-orange: #ff8a5c; --c-mint: #4ecdc4; --c-yellow: #ffe66d;
+            --c-dark: #2d3436; --c-white: #ffffff; --c-bg: #f4f7f6; --radius: 16px;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Quicksand', sans-serif; background-color: var(--c-bg); margin: 0; padding: 0; color: var(--c-dark); font-size: 16px; padding-bottom: 80px; }
+        header { background: var(--c-white); padding: 15px 20px; border-bottom: 2px solid #e0e0e0; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); text-align: center; font-weight: 800; font-size: 1.3rem; }
+        
+        .btn-main { width: 100%; padding: 16px; background: var(--c-mint); color: var(--c-dark); border: 2px solid var(--c-dark); border-radius: 30px; font-weight: 700; font-size: 1.1rem; cursor: pointer; box-shadow: 4px 4px 0 var(--c-dark); transition: all 0.1s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 15px; }
+        .btn-main:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--c-dark); }
+        .btn-main:disabled { background: #b2bec3; cursor: not-allowed; box-shadow: none; transform: translate(2px, 2px); }
+        .btn-reload { background: var(--c-yellow); color: var(--c-dark); margin-top: 0; width: auto; padding: 10px 20px; border-radius: 12px; box-shadow: 2px 2px 0 var(--c-dark); font-size: 0.95rem; }
+
+        .btn-icon { background: white; border: 2px solid var(--c-dark); border-radius: 12px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.4rem; box-shadow: 2px 2px 0 var(--c-dark); transition: all 0.1s; }
+        .btn-icon:active { transform: translate(2px, 2px); box-shadow: none; }
+
+        .container { max-width: 800px; margin: 20px auto; padding: 0 15px; }
+        .card { background: var(--c-white); border: 2px solid var(--c-dark); border-radius: var(--radius); padding: 25px; box-shadow: 6px 6px 0 rgba(0,0,0,0.05); margin-bottom: 25px; }
+        
+        .label { display: block; font-weight: 700; margin-bottom: 10px; font-size: 1rem; }
+        .input-text, .input-area, .select-text { width: 100%; padding: 14px; border: 2px solid #ccc; border-radius: 12px; font-family: inherit; font-size: 1rem; outline: none; background: #fafafa; }
+        .input-text:focus, .input-area:focus, .select-text:focus { border-color: var(--c-orange); background: white; }
+        
+        .form-row { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; }
+        .form-group { flex: 1; min-width: 200px; }
+        
+        .tabs { display: flex; gap: 12px; margin-bottom: 15px; }
+        .tab-btn { flex: 1; padding: 12px; text-align: center; border: 2px solid #e0e0e0; border-radius: 12px; font-weight: 600; cursor: pointer; color: #888; background: #f9f9f9; }
+        .tab-btn.active { border-color: var(--c-dark); color: var(--c-dark); background-color: #fff; box-shadow: 0 4px 0 0 var(--c-orange); transform: translateY(-2px); }
+        .tab-btn.active.tab-2 { box-shadow: 0 4px 0 0 var(--c-mint); }
+
+        .table-container { overflow-x: auto; border-radius: 16px; border: 2px solid var(--c-dark); box-shadow: 4px 4px 0 #eee; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; background: white; }
+        th { background: var(--c-yellow); padding: 15px; text-align: left; border-bottom: 2px solid var(--c-dark); font-weight: 800; }
+        td { padding: 15px; border-bottom: 1px solid #eee; vertical-align: top; line-height: 1.5; }
+        .student-name { font-weight: 700; color: var(--c-dark); font-size: 1.05rem; }
+        .tag-date { font-size: 0.8em; color: #888; font-weight: 600; margin-left: 5px; }
+
+        /* MODAL PREVIEW */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999; display: none; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+        .modal-overlay.open { display: flex; }
+        .modal-box { background: white; width: 95%; max-width: 700px; border-radius: 20px; padding: 25px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); border: 2px solid var(--c-dark); max-height: 90vh; display: flex; flex-direction: column; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .modal-title { font-weight: 800; font-size: 1.3rem; }
+        .close-btn { background: #eee; border: none; font-size: 1.5rem; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .preview-content { background: #fdfdfd; border: 1px solid #ddd; border-radius: 12px; padding: 20px; font-family: 'Times New Roman', Times, serif; color: black; overflow-y: auto; flex: 1; margin-bottom: 20px; line-height: 1.5; }
+    </style>
+</head>
+<body>
+
+    <header>Sổ Đánh Giá Học Sinh</header>
+
+    <div class="container">
+        <!-- FORM NHẬP LIỆU -->
+        <div class="card">
+            <div class="form-row">
+                <div class="form-group" style="flex: 2;">
+                    <label class="label">1. Chọn Học Sinh:</label>
+                    <select id="studentName" class="select-text">
+                        <option value="">-- Bấm vào đây để chọn --</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label class="label">Ngày nhập:</label>
+                    <input type="date" id="inputDate" class="input-text">
+                </div>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <label class="label">2. Đánh giá:</label>
+                <div class="tabs">
+                    <div class="tab-btn active" id="tabComp" onclick="switchTab('competency')">Năng Lực</div>
+                    <div class="tab-btn tab-2" id="tabQual" onclick="switchTab('quality')">Phẩm Chất</div>
+                </div>
+                <div>
+                    <textarea id="textContent" rows="3" class="input-area" placeholder="Nhận xét về năng lực..."></textarea>
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 20px; border-top: 1px dashed #ccc; padding-top: 15px;">
+                <label class="label">3. Chọn ảnh minh chứng (nếu có):</label>
+                <input type="file" id="cameraInput" accept="image/*" class="input-text">
+            </div>
+
+            <button class="btn-main" id="btnSaveLog" onclick="saveLog()">🚀 Gửi lên Google Sheet</button>
+        </div>
+
+        <!-- BẢNG TỔNG HỢP -->
+        <div class="card" style="background: #fff9e6; border-color: var(--c-yellow);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+                <label class="label" style="margin: 0; font-size: 1.2rem;">📜 Xem tổng hợp:</label>
+                <button class="btn-main btn-reload" id="btnLoadData" onclick="fetchData()">🔄 Tải dữ liệu từ Sheet</button>
+            </div>
+            
+            <div style="margin-bottom: 15px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <select id="filterStudent" class="select-text" style="width: auto; flex: 1; min-width: 200px;" onchange="renderTable()">
+                    <option value="">-- Xem tất cả lớp --</option>
+                </select>
+                <button id="btnPreview" class="btn-icon" style="display:none; width: auto; padding: 0 15px; font-size: 0.9rem; background: var(--c-yellow); font-weight: bold; margin: 0;" onclick="previewWord()">
+                    👀 Xem trước & Xuất File
+                </button>
+            </div>
+
+            <div class="table-container">
+                <table id="dataTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 25%">Học Sinh</th>
+                            <th style="width: 37%">Năng Lực</th>
+                            <th style="width: 38%">Phẩm Chất</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr><td colspan="3" style="text-align:center; padding: 30px; color:#999;">Hãy bấm "Tải dữ liệu" để xem</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL XEM TRƯỚC FILE WORD -->
+    <div class="modal-overlay" id="previewModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-title">👀 Xem trước bản in</div>
+                <button class="close-btn" onclick="closePreview()">&times;</button>
+            </div>
+            <div id="previewContent" class="preview-content">
+                <!-- Nội dung file word sẽ được đưa vào đây -->
+            </div>
+            <button class="btn-main" style="margin-top: 0;" onclick="exportWord()">📄 Tải File Word Ngay</button>
+        </div>
+    </div>
+
+    <script>
+        // ==============================================================
+        // 🛑 BƯỚC QUAN TRỌNG: DÁN ĐƯỜNG LINK GOOGLE SCRIPT CỦA BẠN VÀO ĐÂY
+        // ==============================================================
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbznSsm3Yhypr-M_H3AQUlpuqROziQPCXiXltoMMo6Fa5Bkeg3b1kzRqFdDjCEi7Z5Mf4A/exec";
+
+        const STUDENT_LIST = [
+            "01. Hồ Ngọc Gia An", "02. Dương Hoàng Diệu Anh", "03. Nguyễn Trần Tú Anh", "04. Phạm Trung Anh", 
+            "05. Trần Lê Nhật Anh", "06. Trần Ngọc Quỳnh Anh", "07. Trương Ngọc Ánh", "08. Nguyễn Minh Hoàng Bách", 
+            "09. Nguyễn Gia Bảo", "10. Nguyễn Gia Bảo", "11. Lê Trúc Chi", "12. Lê Nguyễn Vũ Duy", 
+            "13. Đặng Trần Linh Đan", "14. Nguyễn Vũ Hải Đăng", "15. Trần Lý Đức", "16. Nguyễn Thị Ngọc Giàu", 
+            "17. Nguyễn Gia Hân", "18. Nguyễn Lê Gia Hân", "19. Nguyễn Ngọc Khả Hân", "20. Hà Quốc Duy Hoàng", 
+            "21. Bùi Quang Huy", "22. Nguyễn Đình Việt Hưng", "23. Chu Minh Thùy", "24. Nguyễn Đăng Khoa", 
+            "25. Phan Đăng Khoa", "26. Châu Ngọc Phương Linh", "27. Dương Trúc Linh", "28. Võ Dương Linh", 
+            "29. Trần Cao Phúc Ngọc", "30. Hàng Quang Minh", "31. Nguyễn Ngọc Ánh Minh", "32. Phạm Hoàng Minh", 
+            "33. Nguyễn Lê Hoàn Nguyên", "34. Nguyễn Trọng Nguyên", "35. Phạm Nguyễn An Nhiên", "36. Đỗ Ngọc Minh Thư", 
+            "37. Nguyễn Võ Anh Thư", "38. Trương Minh Nhật", "39. Đỗ Hữu Phú Tôn", "40. Nguyễn Tuệ Mẫn"
+        ];
+
+        let currentTab = 'competency';
+        let serverLogs = []; 
+
+        window.onload = () => {
+            const studentSelect = document.getElementById('studentName');
+            const filterSelect = document.getElementById('filterStudent');
+            STUDENT_LIST.forEach(name => {
+                let opt1 = document.createElement('option'); opt1.value = name; opt1.innerText = name;
+                let opt2 = document.createElement('option'); opt2.value = name; opt2.innerText = name;
+                studentSelect.appendChild(opt1);
+                filterSelect.appendChild(opt2);
+            });
+
+            const today = new Date();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            document.getElementById('inputDate').value = `${today.getFullYear()}-${mm}-${dd}`;
+        };
+
+        window.switchTab = (type) => {
+            currentTab = type;
+            document.getElementById('tabComp').classList.toggle('active', type === 'competency');
+            document.getElementById('tabQual').classList.toggle('active', type === 'quality');
+            document.getElementById('textContent').placeholder = type === 'competency' ? 'Nhận xét năng lực...' : 'Nhận xét phẩm chất...';
+        };
+
+        function processImage(file) {
+            return new Promise((resolve) => {
+                if (!file) return resolve(null);
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = event => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width, height = img.height;
+                        if (width > 600) { height = Math.round((height * 600) / width); width = 600; }
+                        canvas.width = width; canvas.height = height;
+                        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.6));
+                    };
+                };
+            });
+        }
+
+        window.saveLog = async () => {
+            if(GOOGLE_SCRIPT_URL === "DÁN_LINK_WEB_APP_VÀO_ĐÂY") { alert("Chưa có link Script!"); return; }
+            let name = document.getElementById('studentName').value;
+            const content = document.getElementById('textContent').value.trim();
+            const dateVal = document.getElementById('inputDate').value;
+            const fileInput = document.getElementById('cameraInput');
+
+            if(!name || !content) { alert("Vui lòng chọn học sinh và nhập nội dung!"); return; }
+
+            const btn = document.getElementById('btnSaveLog');
+            btn.disabled = true; btn.innerHTML = "⏳ Đang tải lên...";
+
+            try {
+                let base64Image = fileInput.files.length > 0 ? await processImage(fileInput.files[0]) : null;
+                const logData = {
+                    studentName: name, type: currentTab, content: content,
+                    dateString: `${new Date(dateVal).getDate()}/${new Date(dateVal).getMonth() + 1}`,
+                    imageData: base64Image
+                };
+
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST', body: JSON.stringify(logData)
+                });
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    document.getElementById('textContent').value = "";
+                    document.getElementById('studentName').value = "";
+                    fileInput.value = ""; 
+                    btn.innerHTML = "✅ Tải lên thành công!";
+                    fetchData();
+                    setTimeout(() => { btn.innerHTML = "🚀 Gửi lên Google Sheet"; btn.disabled = false; }, 1500);
+                } else throw new Error(result.message);
+            } catch(e) {
+                alert("Lỗi: " + e.message);
+                btn.disabled = false; btn.innerHTML = "🚀 Gửi lên Google Sheet";
+            }
+        };
+
+        window.fetchData = async () => {
+            if(GOOGLE_SCRIPT_URL === "DÁN_LINK_WEB_APP_VÀO_ĐÂY") { alert("Chưa có link Script!"); return; }
+            const btn = document.getElementById('btnLoadData');
+            btn.innerHTML = "⏳ Đang tải...";
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL);
+                const result = await response.json();
+                
+                if(result.status === 'success') {
+                    serverLogs = result.data;
+                    renderTable();
+                    btn.innerHTML = "✅ Đã cập nhật";
+                } else {
+                    alert("Lỗi tải dữ liệu: " + result.message);
+                }
+            } catch (error) {
+                alert("Không thể kết nối máy chủ Google.");
+            } finally {
+                setTimeout(() => { btn.innerHTML = "🔄 Tải dữ liệu từ Sheet"; btn.disabled = false; }, 2000);
+            }
+        }
+
+        window.renderTable = () => {
+            const tbody = document.getElementById('tableBody');
+            const filterVal = document.getElementById('filterStudent').value;
+            const btnPreview = document.getElementById('btnPreview');
+            
+            if(filterVal) {
+                btnPreview.style.display = 'inline-flex';
+            } else {
+                btnPreview.style.display = 'none';
+            }
+
+            const filteredLogs = filterVal ? serverLogs.filter(l => l.studentName === filterVal) : serverLogs;
+
+            if(filteredLogs.length === 0) {
+                tbody.innerHTML = "<tr><td colspan='3' style='text-align:center; padding:30px; color:#999'>Chưa có dữ liệu (hoặc chưa bấm 'Tải dữ liệu')</td></tr>";
+                return;
+            }
+
+            const groups = {};
+            filteredLogs.forEach(log => {
+                const name = log.studentName;
+                if(!groups[name]) groups[name] = { comp: [], qual: [] };
+                
+                // Trong bảng tổng hợp nhỏ chỉ hiện link xem ảnh để tiết kiệm diện tích
+                let imgHtml = log.imageUrl ? `<br><a href="${log.imageUrl}" target="_blank" style="color:var(--c-mint); font-size:0.9em; font-weight:bold;">🖼️ Xem ảnh Drive</a>` : '';
+                const text = `${log.content} <span class="tag-date">(${log.dateString})</span>${imgHtml}`;
+                
+                if(log.type === 'competency') groups[name].comp.push(text);
+                else groups[name].qual.push(text);
+            });
+
+            let html = "";
+            Object.keys(groups).sort().forEach(name => {
+                const g = groups[name];
+                const cHtml = g.comp.map(t => `<div style="margin-bottom:8px">• ${t}</div>`).join("");
+                const qHtml = g.qual.map(t => `<div style="margin-bottom:8px">• ${t}</div>`).join("");
+                
+                html += `<tr>
+                            <td class="student-name">${name}</td>
+                            <td>${cHtml || '<span style="color:#eee">-</span>'}</td>
+                            <td>${qHtml || '<span style="color:#eee">-</span>'}</td>
+                        </tr>`;
+            });
+            tbody.innerHTML = html;
+        }
+
+        /* --- TÍNH NĂNG XEM TRƯỚC VÀ XUẤT WORD CÓ HIỂN THỊ ẢNH TRỰC TIẾP --- */
+        window.closePreview = () => {
+            document.getElementById('previewModal').classList.remove('open');
+        };
+
+        // Hàm bóc tách ID ảnh từ link Drive để lấy định dạng link hiển thị trực tiếp
+        const getDirectImageUrl = (driveUrl) => {
+            if (!driveUrl) return "";
+            const match = driveUrl.match(/\/d\/(.+?)\//);
+            if (match && match[1]) {
+                return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+            }
+            return driveUrl;
+        };
+
+        const generateWordHTML = (studentName) => {
+            const studentLogs = serverLogs.filter(l => l.studentName === studentName);
+            let compList = [];
+            let qualList = [];
+
+            studentLogs.forEach(log => {
+                let imgHtml = "";
+                if(log.imageUrl) {
+                    const directUrl = getDirectImageUrl(log.imageUrl);
+                    // Dùng thẻ <img> nhúng trực tiếp hình ảnh vào Word và Preview
+                    imgHtml = `<br><img src="${directUrl}" style="max-width: 400px; max-height: 400px; margin-top: 10px; border: 1px solid #ccc; display: block;">`;
+                }
+
+                const text = `<li style="margin-bottom: 15px;">${log.content} <i>(${log.dateString})</i>${imgHtml}</li>`;
+                if(log.type === 'competency') compList.push(text);
+                else qualList.push(text);
+            });
+
+            return `
+                <h2 style="text-align: center; color: #2d3436; margin-top: 0; font-size: 16pt;">PHIẾU ĐÁNH GIÁ HỌC SINH</h2>
+                <p style="font-size: 14pt;"><strong>Họ và tên:</strong> ${studentName}</p>
+                <hr style="border: 0; border-top: 1px solid #ccc; margin: 15px 0;">
+                
+                <h3 style="color: #d35400; font-size: 14pt; text-decoration: underline;">1. Nhận Xét Năng Lực:</h3>
+                <ul style="padding-left: 20px; font-size: 14pt;">
+                    ${compList.length > 0 ? compList.join('') : '<li>Chưa có nhận xét năng lực.</li>'}
+                </ul>
+                
+                <h3 style="color: #d35400; font-size: 14pt; text-decoration: underline; margin-top: 20px;">2. Nhận Xét Phẩm Chất:</h3>
+                <ul style="padding-left: 20px; font-size: 14pt;">
+                    ${qualList.length > 0 ? qualList.join('') : '<li>Chưa có nhận xét phẩm chất.</li>'}
+                </ul>
+            `;
+        };
+
+        window.previewWord = () => {
+            const studentName = document.getElementById('filterStudent').value;
+            if(!studentName) return;
+
+            const htmlContent = generateWordHTML(studentName);
+            document.getElementById('previewContent').innerHTML = htmlContent;
+            document.getElementById('previewModal').classList.add('open');
+        };
+
+        window.exportWord = () => {
+            const studentName = document.getElementById('filterStudent').value;
+            if(!studentName) return;
+
+            const innerHTML = generateWordHTML(studentName);
+
+            const htmlContent = `
+                <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+                <head>
+                    <meta charset='utf-8'>
+                    <title>Đánh Giá ${studentName}</title>
+                    <style>
+                        body { font-family: 'Times New Roman', serif; }
+                        ul { line-height: 1.6; }
+                        li { margin-bottom: 8px; }
+                    </style>
+                </head>
+                <body>
+                    ${innerHTML}
+                </body>
+                </html>
+            `;
+
+            const blob = new Blob(['\ufeff', htmlContent], {
+                type: 'application/msword'
+            });
+
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            
+            const safeName = studentName.replace(/\s+/g, '_').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            link.download = `Danh_Gia_${safeName}.doc`;
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            closePreview();
+        };
+    </script>
+</body>
+</html>
