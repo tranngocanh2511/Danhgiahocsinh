@@ -3,8 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sổ Đánh Giá (Vạn Năng)</title>
+    <title>Sổ Đánh Giá Học Sinh</title>
+    <!-- Font chữ -->
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- Thư viện xuất Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
     <style>
         :root {
             --c-orange: #ff8a5c; --c-mint: #4ecdc4; --c-yellow: #ffe66d;
@@ -12,30 +16,33 @@
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Quicksand', sans-serif; background-color: var(--c-bg); margin: 0; padding: 0; color: var(--c-dark); font-size: 16px; padding-bottom: 80px; }
+        
         header { background: var(--c-white); padding: 15px 20px; border-bottom: 2px solid #e0e0e0; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); text-align: center; font-weight: 800; font-size: 1.3rem; }
         
-        .btn-main { width: 100%; padding: 16px; background: var(--c-mint); color: var(--c-dark); border: 2px solid var(--c-dark); border-radius: 30px; font-weight: 700; font-size: 1.1rem; cursor: pointer; box-shadow: 4px 4px 0 var(--c-dark); transition: all 0.1s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 15px; }
-        .btn-main:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--c-dark); }
-        .btn-main:disabled { background: #b2bec3; cursor: not-allowed; box-shadow: none; transform: translate(2px, 2px); }
-        .btn-reload { background: var(--c-yellow); color: var(--c-dark); margin-top: 0; width: auto; padding: 10px 20px; border-radius: 12px; box-shadow: 2px 2px 0 var(--c-dark); font-size: 0.95rem; }
-
-        .btn-icon { background: white; border: 2px solid var(--c-dark); border-radius: 12px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.4rem; box-shadow: 2px 2px 0 var(--c-dark); transition: all 0.1s; }
-        .btn-icon:active { transform: translate(2px, 2px); box-shadow: none; }
-
         .container { max-width: 800px; margin: 20px auto; padding: 0 15px; }
         .card { background: var(--c-white); border: 2px solid var(--c-dark); border-radius: var(--radius); padding: 25px; box-shadow: 6px 6px 0 rgba(0,0,0,0.05); margin-bottom: 25px; }
         
         .label { display: block; font-weight: 700; margin-bottom: 10px; font-size: 1rem; }
-        .input-text, .input-area, .select-text { width: 100%; padding: 14px; border: 2px solid #ccc; border-radius: 12px; font-family: inherit; font-size: 1rem; outline: none; background: #fafafa; }
-        .input-text:focus, .input-area:focus, .select-text:focus { border-color: var(--c-orange); background: white; }
+        .input-text, .input-area, .select-text { width: 100%; padding: 14px; border: 2px solid #ccc; border-radius: 12px; font-family: inherit; font-size: 1rem; outline: none; background: #fafafa; transition: 0.2s; }
+        .input-text:focus, .input-area:focus, .select-text:focus { border-color: var(--c-orange); background: white; box-shadow: 0 0 0 3px rgba(255, 138, 92, 0.2); }
         
         .form-row { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; }
         .form-group { flex: 1; min-width: 200px; }
         
         .tabs { display: flex; gap: 12px; margin-bottom: 15px; }
-        .tab-btn { flex: 1; padding: 12px; text-align: center; border: 2px solid #e0e0e0; border-radius: 12px; font-weight: 600; cursor: pointer; color: #888; background: #f9f9f9; }
+        .tab-btn { flex: 1; padding: 12px; text-align: center; border: 2px solid #e0e0e0; border-radius: 12px; font-weight: 600; cursor: pointer; color: #888; background: #f9f9f9; transition: 0.2s; }
         .tab-btn.active { border-color: var(--c-dark); color: var(--c-dark); background-color: #fff; box-shadow: 0 4px 0 0 var(--c-orange); transform: translateY(-2px); }
         .tab-btn.active.tab-2 { box-shadow: 0 4px 0 0 var(--c-mint); }
+
+        .btn-main { width: 100%; padding: 16px; background: var(--c-mint); color: var(--c-dark); border: 2px solid var(--c-dark); border-radius: 30px; font-weight: 700; font-size: 1.1rem; cursor: pointer; box-shadow: 4px 4px 0 var(--c-dark); transition: all 0.1s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 15px; }
+        .btn-main:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--c-dark); }
+        .btn-main:disabled { background: #b2bec3; cursor: not-allowed; box-shadow: none; transform: translate(2px, 2px); }
+        .btn-reload { background: var(--c-yellow); color: var(--c-dark); margin-top: 0; width: auto; padding: 10px 20px; border-radius: 12px; box-shadow: 2px 2px 0 var(--c-dark); font-size: 0.95rem; }
+        .btn-action { flex: 1; padding: 14px; border-radius: 12px; font-weight: 700; cursor: pointer; border: 2px solid var(--c-dark); box-shadow: 3px 3px 0 var(--c-dark); transition: all 0.1s; background: var(--c-orange); color: white; }
+        .btn-action:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--c-dark); }
+        .btn-delete { background: #fff; color: #e74c3c; border-color: #e74c3c; box-shadow: none; }
+        .btn-icon { background: white; border: 2px solid var(--c-dark); border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.1s; box-shadow: 2px 2px 0 var(--c-dark); padding: 0 15px; font-size: 0.9rem; height: 44px; margin: 0; }
+        .btn-icon:active { transform: translate(2px, 2px); box-shadow: none; }
 
         .table-container { overflow-x: auto; border-radius: 16px; border: 2px solid var(--c-dark); box-shadow: 4px 4px 0 #eee; }
         table { width: 100%; border-collapse: collapse; min-width: 600px; background: white; }
@@ -59,8 +66,12 @@
     <header>Sổ Đánh Giá Học Sinh</header>
 
     <div class="container">
-        <!-- FORM NHẬP LIỆU -->
+        <!-- CARD 1: FORM NHẬP LIỆU -->
         <div class="card">
+            <div style="background: #e8f5e9; padding: 10px 15px; border-radius: 8px; margin-bottom: 20px; color: #2e7d32; font-weight: bold; border: 1px solid #c8e6c9;">
+                🔗 Đang kết nối: Google Sheets & Drive
+            </div>
+
             <div class="form-row">
                 <div class="form-group" style="flex: 2;">
                     <label class="label">1. Chọn Học Sinh:</label>
@@ -93,7 +104,7 @@
             <button class="btn-main" id="btnSaveLog" onclick="saveLog()">🚀 Gửi lên Google Sheet</button>
         </div>
 
-        <!-- BẢNG TỔNG HỢP -->
+        <!-- CARD 2: BẢNG TỔNG HỢP & XUẤT DỮ LIỆU -->
         <div class="card" style="background: #fff9e6; border-color: var(--c-yellow);">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
                 <label class="label" style="margin: 0; font-size: 1.2rem;">📜 Xem tổng hợp:</label>
@@ -104,7 +115,7 @@
                 <select id="filterStudent" class="select-text" style="width: auto; flex: 1; min-width: 200px;" onchange="renderTable()">
                     <option value="">-- Xem tất cả lớp --</option>
                 </select>
-                <button id="btnPreview" class="btn-icon" style="display:none; width: auto; padding: 0 15px; font-size: 0.9rem; background: var(--c-yellow); font-weight: bold; margin: 0;" onclick="previewWord()">
+                <button id="btnPreview" class="btn-icon" style="display:none; background: var(--c-yellow); font-weight: bold;" onclick="previewWord()">
                     👀 Xem trước & Xuất File
                 </button>
             </div>
@@ -119,10 +130,16 @@
                         </tr>
                     </thead>
                     <tbody id="tableBody">
-                        <tr><td colspan="3" style="text-align:center; padding: 30px; color:#999;">Hãy bấm "Tải dữ liệu" để xem</td></tr>
+                        <tr><td colspan="3" style="text-align:center; padding: 30px; color:#999;">Hãy bấm "Tải dữ liệu từ Sheet" để xem</td></tr>
                     </tbody>
                 </table>
             </div>
+        </div>
+
+        <!-- NÚT CÔNG CỤ CHUNG DƯỚI CÙNG -->
+        <div style="display: flex; gap: 15px; margin-top: 25px;">
+            <button class="btn-action" onclick="exportExcel()">📤 Xuất Excel (Cả lớp)</button>
+            <button class="btn-action btn-delete" onclick="alert('Để đảm bảo an toàn, dữ liệu chỉ có thể xóa trực tiếp trên trang Google Sheets của bạn. Hãy mở file Sheets và xóa các dòng không cần thiết nhé!')">🗑️ Xóa Dữ Liệu</button>
         </div>
     </div>
 
@@ -143,9 +160,11 @@
     <script>
         // ==============================================================
         // 🛑 BƯỚC QUAN TRỌNG: DÁN ĐƯỜNG LINK GOOGLE SCRIPT CỦA BẠN VÀO ĐÂY
+        // Link phải có đuôi là "/exec"
         // ==============================================================
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby41Qp3T4ccc1ix2faY0BY7TN_fMgUa82S3mk0bV56_BnWWr2FYvQJ5FYEi-cOzNGA3iQ/exec";
 
+        // Danh sách 40 học sinh
         const STUDENT_LIST = [
             "01. Hồ Ngọc Gia An", "02. Dương Hoàng Diệu Anh", "03. Nguyễn Trần Tú Anh", "04. Phạm Trung Anh", 
             "05. Trần Lê Nhật Anh", "06. Trần Ngọc Quỳnh Anh", "07. Trương Ngọc Ánh", "08. Nguyễn Minh Hoàng Bách", 
@@ -162,9 +181,11 @@
         let currentTab = 'competency';
         let serverLogs = []; 
 
+        // 1. Khởi tạo khi trang tải xong
         window.onload = () => {
             const studentSelect = document.getElementById('studentName');
             const filterSelect = document.getElementById('filterStudent');
+            
             STUDENT_LIST.forEach(name => {
                 let opt1 = document.createElement('option'); opt1.value = name; opt1.innerText = name;
                 let opt2 = document.createElement('option'); opt2.value = name; opt2.innerText = name;
@@ -172,12 +193,14 @@
                 filterSelect.appendChild(opt2);
             });
 
+            // Set ngày hôm nay làm mặc định
             const today = new Date();
             const mm = String(today.getMonth() + 1).padStart(2, '0');
             const dd = String(today.getDate()).padStart(2, '0');
             document.getElementById('inputDate').value = `${today.getFullYear()}-${mm}-${dd}`;
         };
 
+        // Đổi tab Năng lực / Phẩm chất
         window.switchTab = (type) => {
             currentTab = type;
             document.getElementById('tabComp').classList.toggle('active', type === 'competency');
@@ -185,6 +208,7 @@
             document.getElementById('textContent').placeholder = type === 'competency' ? 'Nhận xét năng lực...' : 'Nhận xét phẩm chất...';
         };
 
+        // Xử lý và nén ảnh xuống tối đa 600px để gửi nhanh
         function processImage(file) {
             return new Promise((resolve) => {
                 if (!file) return resolve(null);
@@ -205,22 +229,28 @@
             });
         }
 
+        // 2. Hàm GỬI dữ liệu lên Sheet
         window.saveLog = async () => {
-            if(GOOGLE_SCRIPT_URL === "DÁN_LINK_WEB_APP_VÀO_ĐÂY") { alert("Chưa có link Script!"); return; }
+            if(GOOGLE_SCRIPT_URL === "DÁN_LINK_WEB_APP_VÀO_ĐÂY") { 
+                alert("Bạn chưa dán đường link Google Script vào Code!"); return; 
+            }
+            
             let name = document.getElementById('studentName').value;
             const content = document.getElementById('textContent').value.trim();
             const dateVal = document.getElementById('inputDate').value;
             const fileInput = document.getElementById('cameraInput');
 
-            if(!name || !content) { alert("Vui lòng chọn học sinh và nhập nội dung!"); return; }
+            if(!name || !content) { alert("Vui lòng chọn học sinh và nhập nội dung nhận xét!"); return; }
 
             const btn = document.getElementById('btnSaveLog');
-            btn.disabled = true; btn.innerHTML = "⏳ Đang tải lên...";
+            btn.disabled = true; btn.innerHTML = "⏳ Đang tải lên Drive và Sheet...";
 
             try {
                 let base64Image = fileInput.files.length > 0 ? await processImage(fileInput.files[0]) : null;
                 const logData = {
-                    studentName: name, type: currentTab, content: content,
+                    studentName: name, 
+                    type: currentTab, 
+                    content: content,
                     dateString: `${new Date(dateVal).getDate()}/${new Date(dateVal).getMonth() + 1}`,
                     imageData: base64Image
                 };
@@ -235,17 +265,20 @@
                     document.getElementById('studentName').value = "";
                     fileInput.value = ""; 
                     btn.innerHTML = "✅ Tải lên thành công!";
+                    // Tải lại bảng để thấy kết quả mới ngay lập tức
                     fetchData();
                     setTimeout(() => { btn.innerHTML = "🚀 Gửi lên Google Sheet"; btn.disabled = false; }, 1500);
                 } else throw new Error(result.message);
             } catch(e) {
-                alert("Lỗi: " + e.message);
+                alert("Lỗi kết nối: " + e.message + "\n(Vui lòng kiểm tra cài đặt 'Bất kỳ ai' ở Google Script)");
                 btn.disabled = false; btn.innerHTML = "🚀 Gửi lên Google Sheet";
             }
         };
 
+        // 3. Hàm TẢI dữ liệu từ Sheet về Web App
         window.fetchData = async () => {
-            if(GOOGLE_SCRIPT_URL === "DÁN_LINK_WEB_APP_VÀO_ĐÂY") { alert("Chưa có link Script!"); return; }
+            if(GOOGLE_SCRIPT_URL === "DÁN_LINK_WEB_APP_VÀO_ĐÂY") { alert("Bạn chưa dán link Script!"); return; }
+            
             const btn = document.getElementById('btnLoadData');
             btn.innerHTML = "⏳ Đang tải...";
             btn.disabled = true;
@@ -262,12 +295,13 @@
                     alert("Lỗi tải dữ liệu: " + result.message);
                 }
             } catch (error) {
-                alert("Không thể kết nối máy chủ Google.");
+                alert("Lỗi mạng: Không thể lấy dữ liệu từ Google Sheets.");
             } finally {
                 setTimeout(() => { btn.innerHTML = "🔄 Tải dữ liệu từ Sheet"; btn.disabled = false; }, 2000);
             }
         }
 
+        // 4. Hàm VẼ BẢNG và LỌC
         window.renderTable = () => {
             const tbody = document.getElementById('tableBody');
             const filterVal = document.getElementById('filterStudent').value;
@@ -282,7 +316,7 @@
             const filteredLogs = filterVal ? serverLogs.filter(l => l.studentName === filterVal) : serverLogs;
 
             if(filteredLogs.length === 0) {
-                tbody.innerHTML = "<tr><td colspan='3' style='text-align:center; padding:30px; color:#999'>Chưa có dữ liệu (hoặc chưa bấm 'Tải dữ liệu')</td></tr>";
+                tbody.innerHTML = "<tr><td colspan='3' style='text-align:center; padding:30px; color:#999'>Chưa có dữ liệu cho học sinh này</td></tr>";
                 return;
             }
 
@@ -291,8 +325,8 @@
                 const name = log.studentName;
                 if(!groups[name]) groups[name] = { comp: [], qual: [] };
                 
-                // Trong bảng tổng hợp nhỏ chỉ hiện link xem ảnh để tiết kiệm diện tích
-                let imgHtml = log.imageUrl ? `<br><a href="${log.imageUrl}" target="_blank" style="color:var(--c-mint); font-size:0.9em; font-weight:bold;">🖼️ Xem ảnh Drive</a>` : '';
+                // Thu gọn link ảnh trên bảng để tránh lộn xộn
+                let imgHtml = log.imageUrl ? `<br><a href="${log.imageUrl}" target="_blank" style="color:var(--c-mint); font-size:0.9em; font-weight:bold; text-decoration:none;">🖼️ Bấm xem ảnh</a>` : '';
                 const text = `${log.content} <span class="tag-date">(${log.dateString})</span>${imgHtml}`;
                 
                 if(log.type === 'competency') groups[name].comp.push(text);
@@ -314,15 +348,17 @@
             tbody.innerHTML = html;
         }
 
-        /* --- TÍNH NĂNG XEM TRƯỚC VÀ XUẤT WORD CÓ HIỂN THỊ ẢNH TRỰC TIẾP --- */
+        // ==========================================
+        // CÔNG CỤ XEM TRƯỚC VÀ XUẤT FILE WORD / EXCEL
+        // ==========================================
         window.closePreview = () => {
             document.getElementById('previewModal').classList.remove('open');
         };
 
-        // Hàm bóc tách ID ảnh từ link Drive để lấy định dạng link hiển thị trực tiếp
+        // Chuyển link Drive tiêu chuẩn thành link hiển thị trực tiếp bằng tag <img>
         const getDirectImageUrl = (driveUrl) => {
             if (!driveUrl) return "";
-            const match = driveUrl.match(/\/d\/(.+?)\//);
+            const match = driveUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || driveUrl.match(/\/d\/([a-zA-Z0-9_-]+)/) || driveUrl.match(/id=([a-zA-Z0-9_-]+)/);
             if (match && match[1]) {
                 return `https://drive.google.com/uc?export=view&id=${match[1]}`;
             }
@@ -338,27 +374,26 @@
                 let imgHtml = "";
                 if(log.imageUrl) {
                     const directUrl = getDirectImageUrl(log.imageUrl);
-                    // Dùng thẻ <img> nhúng trực tiếp hình ảnh vào Word và Preview
                     imgHtml = `<br><img src="${directUrl}" style="max-width: 400px; max-height: 400px; margin-top: 10px; border: 1px solid #ccc; display: block;">`;
                 }
-
                 const text = `<li style="margin-bottom: 15px;">${log.content} <i>(${log.dateString})</i>${imgHtml}</li>`;
+                
                 if(log.type === 'competency') compList.push(text);
                 else qualList.push(text);
             });
 
             return `
-                <h2 style="text-align: center; color: #2d3436; margin-top: 0; font-size: 16pt;">PHIẾU ĐÁNH GIÁ HỌC SINH</h2>
-                <p style="font-size: 14pt;"><strong>Họ và tên:</strong> ${studentName}</p>
+                <h2 style="text-align: center; color: #2d3436; margin-top: 0; font-size: 16pt; font-family: 'Times New Roman', serif;">PHIẾU ĐÁNH GIÁ HỌC SINH</h2>
+                <p style="font-size: 14pt; font-family: 'Times New Roman', serif;"><strong>Họ và tên:</strong> ${studentName}</p>
                 <hr style="border: 0; border-top: 1px solid #ccc; margin: 15px 0;">
                 
-                <h3 style="color: #d35400; font-size: 14pt; text-decoration: underline;">1. Nhận Xét Năng Lực:</h3>
-                <ul style="padding-left: 20px; font-size: 14pt;">
+                <h3 style="color: #d35400; font-size: 14pt; text-decoration: underline; font-family: 'Times New Roman', serif;">1. Nhận Xét Năng Lực:</h3>
+                <ul style="padding-left: 20px; font-size: 14pt; font-family: 'Times New Roman', serif;">
                     ${compList.length > 0 ? compList.join('') : '<li>Chưa có nhận xét năng lực.</li>'}
                 </ul>
                 
-                <h3 style="color: #d35400; font-size: 14pt; text-decoration: underline; margin-top: 20px;">2. Nhận Xét Phẩm Chất:</h3>
-                <ul style="padding-left: 20px; font-size: 14pt;">
+                <h3 style="color: #d35400; font-size: 14pt; text-decoration: underline; margin-top: 20px; font-family: 'Times New Roman', serif;">2. Nhận Xét Phẩm Chất:</h3>
+                <ul style="padding-left: 20px; font-size: 14pt; font-family: 'Times New Roman', serif;">
                     ${qualList.length > 0 ? qualList.join('') : '<li>Chưa có nhận xét phẩm chất.</li>'}
                 </ul>
             `;
@@ -367,7 +402,6 @@
         window.previewWord = () => {
             const studentName = document.getElementById('filterStudent').value;
             if(!studentName) return;
-
             const htmlContent = generateWordHTML(studentName);
             document.getElementById('previewContent').innerHTML = htmlContent;
             document.getElementById('previewModal').classList.add('open');
@@ -396,10 +430,7 @@
                 </html>
             `;
 
-            const blob = new Blob(['\ufeff', htmlContent], {
-                type: 'application/msword'
-            });
-
+            const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
@@ -411,8 +442,37 @@
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
-
             closePreview();
+        };
+
+        window.exportExcel = () => {
+            if(serverLogs.length === 0) { alert("Chưa có dữ liệu. Vui lòng bấm 'Tải dữ liệu từ Sheet' trước!"); return; }
+            try {
+                const groups = {};
+                serverLogs.forEach(log => {
+                    const name = log.studentName;
+                    if(!groups[name]) groups[name] = { comp: [], qual: [] };
+                    const text = `${log.content} (${log.dateString})${log.imageUrl ? ' [Có ảnh]' : ''}`;
+                    if(log.type === 'competency') groups[name].comp.push(text);
+                    else groups[name].qual.push(text);
+                });
+
+                const data = Object.values(groups).map((g, index) => ({
+                    "STT": index + 1,
+                    "Họ và Tên": Object.keys(groups)[index],
+                    "Năng Lực": g.comp.join("\n"),
+                    "Phẩm Chất": g.qual.join("\n")
+                }));
+
+                const ws = XLSX.utils.json_to_sheet(data);
+                ws['!cols'] = [{wch: 5}, {wch: 25}, {wch: 50}, {wch: 50}];
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "DanhGia");
+                
+                XLSX.writeFile(wb, `TongHop_DanhGia_HocSinh.xlsx`);
+            } catch (e) {
+                alert("Lỗi xuất Excel: " + e.message);
+            }
         };
     </script>
 </body>
