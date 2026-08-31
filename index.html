@@ -23,8 +23,8 @@
         .card { background: var(--c-white); border: 2px solid var(--c-dark); border-radius: var(--radius); padding: 25px; box-shadow: 6px 6px 0 rgba(0,0,0,0.05); margin-bottom: 25px; }
         
         .label { display: block; font-weight: 700; margin-bottom: 10px; font-size: 1rem; }
-        .input-text, .input-area, .select-text { width: 100%; padding: 14px; border: 2px solid #ccc; border-radius: 12px; font-family: inherit; font-size: 1rem; outline: none; background: #fafafa; transition: 0.2s; }
-        .input-text:focus, .input-area:focus, .select-text:focus { border-color: var(--c-orange); background: white; box-shadow: 0 0 0 3px rgba(255, 138, 92, 0.2); }
+        .input-text, .input-area { width: 100%; padding: 14px; border: 2px solid #ccc; border-radius: 12px; font-family: inherit; font-size: 1rem; outline: none; background: #fafafa; transition: 0.2s; }
+        .input-text:focus, .input-area:focus { border-color: var(--c-orange); background: white; box-shadow: 0 0 0 3px rgba(255, 138, 92, 0.2); }
         
         .form-row { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; }
         .form-group { flex: 1; min-width: 200px; }
@@ -51,6 +51,14 @@
         .student-name { font-weight: 700; color: var(--c-dark); font-size: 1.05rem; }
         .tag-date { font-size: 0.8em; color: #888; font-weight: 600; margin-left: 5px; }
 
+        /* DANH SÁCH CHỌN THÔNG MINH */
+        .autocomplete-wrapper { position: relative; width: 100%; }
+        .autocomplete-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 2px solid var(--c-dark); border-radius: 12px; margin-top: 5px; max-height: 220px; overflow-y: auto; z-index: 2000; display: none; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .autocomplete-dropdown.show { display: block; }
+        .autocomplete-item { padding: 12px 15px; cursor: pointer; border-bottom: 1px solid #eee; transition: background 0.1s; font-size: 1rem; }
+        .autocomplete-item:last-child { border-bottom: none; }
+        .autocomplete-item:hover, .autocomplete-item:active { background: var(--c-mint); font-weight: bold; }
+
         /* MODAL PREVIEW */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999; display: none; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
         .modal-overlay.open { display: flex; }
@@ -75,9 +83,11 @@
             <div class="form-row">
                 <div class="form-group" style="flex: 2;">
                     <label class="label">1. Chọn Học Sinh:</label>
-                    <select id="studentName" class="select-text">
-                        <option value="">-- Bấm vào đây để chọn --</option>
-                    </select>
+                    <!-- Ô tìm kiếm thông minh thay cho Select -->
+                    <div class="autocomplete-wrapper">
+                        <input type="text" id="studentName" class="input-text" placeholder="-- Bấm vào đây hoặc gõ tên --" autocomplete="off">
+                        <div id="studentDropdown" class="autocomplete-dropdown"></div>
+                    </div>
                 </div>
                 <div class="form-group" style="flex: 1;">
                     <label class="label">Ngày nhập:</label>
@@ -112,9 +122,12 @@
             </div>
             
             <div style="margin-bottom: 15px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                <select id="filterStudent" class="select-text" style="width: auto; flex: 1; min-width: 200px;" onchange="renderTable()">
-                    <option value="">-- Xem tất cả lớp --</option>
-                </select>
+                <!-- Bộ lọc thông minh -->
+                <div class="autocomplete-wrapper" style="flex: 1; min-width: 200px;">
+                    <input type="text" id="filterStudent" class="input-text" placeholder="-- Xem tất cả lớp --" autocomplete="off" style="padding: 10px; font-size: 0.95rem;">
+                    <div id="filterDropdown" class="autocomplete-dropdown"></div>
+                </div>
+
                 <button id="btnPreview" class="btn-icon" style="display:none; background: var(--c-yellow); font-weight: bold;" onclick="previewWord()">
                     👀 Xem trước & Xuất File
                 </button>
@@ -139,7 +152,7 @@
         <!-- NÚT CÔNG CỤ CHUNG DƯỚI CÙNG -->
         <div style="display: flex; gap: 15px; margin-top: 25px;">
             <button class="btn-action" onclick="exportExcel()">📤 Xuất Excel (Cả lớp)</button>
-            <button class="btn-action btn-delete" onclick="alert('Để đảm bảo an toàn, dữ liệu chỉ có thể xóa trực tiếp trên trang Google Sheets của bạn. Hãy mở file Sheets và xóa các dòng không cần thiết nhé!')">🗑️ Xóa Dữ Liệu</button>
+            <button class="btn-action btn-delete" onclick="alert('Để đảm bảo an toàn, dữ liệu chỉ có thể xóa trực tiếp trên trang Google Sheets của bạn. Hãy mở file Sheets và xóa các dòng không cần thiết nhé!')">🗑️ Hướng Dẫn Xóa</button>
         </div>
     </div>
 
@@ -181,17 +194,75 @@
         let currentTab = 'competency';
         let serverLogs = []; 
 
+        // Hàm cấu hình Ô tìm kiếm thông minh (Autocomplete)
+        function setupAutocomplete(inputId, dropdownId, list, isFilter = false) {
+            const inputEl = document.getElementById(inputId);
+            const dropdownEl = document.getElementById(dropdownId);
+
+            function renderList(items) {
+                dropdownEl.innerHTML = '';
+                
+                // Nút "Xem tất cả" cho bộ lọc bảng tổng hợp
+                if (isFilter) {
+                    const divAll = document.createElement('div');
+                    divAll.className = 'autocomplete-item';
+                    divAll.style.color = '#e74c3c';
+                    divAll.innerText = "-- Xem tất cả lớp --";
+                    divAll.onmousedown = () => {
+                        inputEl.value = "";
+                        dropdownEl.classList.remove('show');
+                        renderTable();
+                    };
+                    dropdownEl.appendChild(divAll);
+                }
+
+                if (items.length === 0) {
+                    const divEmpty = document.createElement('div');
+                    divEmpty.className = 'autocomplete-item';
+                    divEmpty.style.color = '#999';
+                    divEmpty.innerText = "Không tìm thấy tên...";
+                    dropdownEl.appendChild(divEmpty);
+                    return;
+                }
+
+                items.forEach(name => {
+                    const div = document.createElement('div');
+                    div.className = 'autocomplete-item';
+                    div.innerText = name;
+                    // Dùng mousedown để xử lý ngay trước khi input mất tiêu điểm (blur)
+                    div.onmousedown = () => {
+                        inputEl.value = name;
+                        dropdownEl.classList.remove('show');
+                        if(isFilter) renderTable();
+                    };
+                    dropdownEl.appendChild(div);
+                });
+            }
+
+            // Bấm vào là xổ ra hết
+            inputEl.addEventListener('focus', () => {
+                renderList(list);
+                dropdownEl.classList.add('show');
+            });
+
+            // Gõ là tự động lọc
+            inputEl.addEventListener('input', (e) => {
+                const val = e.target.value.toLowerCase();
+                const filtered = list.filter(name => name.toLowerCase().includes(val));
+                renderList(filtered);
+                dropdownEl.classList.add('show');
+            });
+
+            // Bấm ra ngoài thì đóng lại
+            inputEl.addEventListener('blur', () => {
+                setTimeout(() => dropdownEl.classList.remove('show'), 200);
+            });
+        }
+
         // 1. Khởi tạo khi trang tải xong
         window.onload = () => {
-            const studentSelect = document.getElementById('studentName');
-            const filterSelect = document.getElementById('filterStudent');
-            
-            STUDENT_LIST.forEach(name => {
-                let opt1 = document.createElement('option'); opt1.value = name; opt1.innerText = name;
-                let opt2 = document.createElement('option'); opt2.value = name; opt2.innerText = name;
-                studentSelect.appendChild(opt1);
-                filterSelect.appendChild(opt2);
-            });
+            setupAutocomplete('studentName', 'studentDropdown', STUDENT_LIST);
+            setupAutocomplete('filterStudent', 'filterDropdown', STUDENT_LIST, true);
 
             // Set ngày hôm nay làm mặc định
             const today = new Date();
@@ -235,12 +306,12 @@
                 alert("Bạn chưa dán đường link Google Script vào Code!"); return; 
             }
             
-            let name = document.getElementById('studentName').value;
+            let name = document.getElementById('studentName').value.trim();
             const content = document.getElementById('textContent').value.trim();
             const dateVal = document.getElementById('inputDate').value;
             const fileInput = document.getElementById('cameraInput');
 
-            if(!name || !content) { alert("Vui lòng chọn học sinh và nhập nội dung nhận xét!"); return; }
+            if(!name || !content) { alert("Vui lòng chọn hoặc nhập tên học sinh và nội dung nhận xét!"); return; }
 
             const btn = document.getElementById('btnSaveLog');
             btn.disabled = true; btn.innerHTML = "⏳ Đang tải lên Drive và Sheet...";
@@ -304,7 +375,7 @@
         // 4. Hàm VẼ BẢNG và LỌC
         window.renderTable = () => {
             const tbody = document.getElementById('tableBody');
-            const filterVal = document.getElementById('filterStudent').value;
+            const filterVal = document.getElementById('filterStudent').value.trim();
             const btnPreview = document.getElementById('btnPreview');
             
             if(filterVal) {
@@ -400,7 +471,7 @@
         };
 
         window.previewWord = () => {
-            const studentName = document.getElementById('filterStudent').value;
+            const studentName = document.getElementById('filterStudent').value.trim();
             if(!studentName) return;
             const htmlContent = generateWordHTML(studentName);
             document.getElementById('previewContent').innerHTML = htmlContent;
@@ -408,7 +479,7 @@
         };
 
         window.exportWord = () => {
-            const studentName = document.getElementById('filterStudent').value;
+            const studentName = document.getElementById('filterStudent').value.trim();
             if(!studentName) return;
 
             const innerHTML = generateWordHTML(studentName);
